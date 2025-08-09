@@ -5,7 +5,7 @@
 # Autor: Hector Mor
 # Fecha: 2024-06-27
 # Permisos: Debe ejecutarse con sudo o como root
-# chmod +x redimensionar_particion.sh
+# chmod +x redimensionar_particion_seguro.sh
 # Uso:
 #   sudo ./redimensionar_particion_seguro.sh /dev/sdX /dev/sdXY /dev/sdXZ
 # Ejemplo:
@@ -34,6 +34,7 @@ if [[ $EUID -ne 0 ]]; then
     echo "❌ Este script debe ejecutarse como root o con sudo."
     exit 1
 fi
+
 
 # ========================
 # Mostrar mapa de discos
@@ -72,6 +73,12 @@ fi
 # ========================
 echo "🔹 Desmontando $PART_DEL si está montada..."
 umount "$PART_DEL" 2>/dev/null || echo "$PART_DEL no estaba montada."
+
+# Validar que realmente esté desmontada
+if mount | grep -q "^$PART_DEL "; then
+    echo "❌ La partición $PART_DEL sigue montada. Por favor, desmonta manualmente antes de continuar."
+    exit 1
+fi
 
 echo "🔹 Eliminando $PART_DEL..."
 parted "$DISK" rm "${PART_DEL//[^0-9]/}"
